@@ -1,0 +1,3 @@
+([('converter_ui',
+   '/Users/alexandra/Documents/data-converter-tool/dist/converter_ui',
+   'EXECUTABLE')],)
