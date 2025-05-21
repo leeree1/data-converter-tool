@@ -1,36 +1,70 @@
-name: Build Data Converter
+name: Data Converter Build Workflow
 
 on:
   push:
     branches: [ "main" ]
+  schedule:
+    - cron: '0 20 * * 3'  # W każdą środę o 20:00 (czas UTC)
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: macos-latest
-    
+  windows-build:
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Set up Python
+
+    - name: Set up Python (Windows)
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
-    
-    - name: Install dependencies
+
+    - name: Install dependencies (PowerShell)
+      shell: pwsh
       run: |
         python -m pip install --upgrade pip
         pip install pyinstaller PyQt5 pyyaml xmltodict
-        
-    - name: Build
+        .\installResources.ps1
+
+    - name: Build Windows EXE
+      shell: pwsh
       run: |
-        pyinstaller --clean --onefile converter.py
-        pyinstaller --clean --onefile --windowed converter_ui.py
-        
-    - name: Upload artifacts
+        pyinstaller --onefile converter.py
+        pyinstaller --onefile --noconsole converter_ui.py
+
+    - name: Upload Windows artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: macos-app
+        name: windows-build
+        path: |
+          dist/converter.exe
+          dist/converter_ui.exe
+
+  macos-build:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python (Mac)
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies (Mac)
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller PyQt5 pyyaml xmltodict
+        chmod +x ./installResources.sh
+        ./installResources.sh
+
+    - name: Build Mac application
+      run: |
+        pyinstaller --onefile converter.py
+        pyinstaller --onefile --windowed converter_ui.py
+
+    - name: Upload Mac artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-build
         path: |
           dist/converter
           dist/converter_ui
