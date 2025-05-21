@@ -4,42 +4,33 @@ on:
   push:
     branches: [ "main" ]
   schedule:
-    - cron: '0 0 * * 0'  # Raz w tygodniu w niedzielę o północy
-  workflow_dispatch:     # Ręczne uruchomienie
+    - cron: '0 0 * * 0'  # Niedziela o północy
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-latest  # Domyślny serwer dla Maca
-    
+    runs-on: macos-latest
+
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4  
+
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
-    
-    - name: Install dependencies (Mac)
+
+    - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install pyinstaller PyQt5 pyyaml xmltodict
-        
-    - name: Run installResources.ps1 (Mac compatible)
-      shell: bash
-      run: |
-        chmod +x ./installResources.ps1
-        ./installResources.ps1
-        
-    - name: Build console version
+
+    - name: Build
       run: |
         pyinstaller --onefile converter.py
-        
-    - name: Build GUI version
-      run: |
         pyinstaller --onefile --windowed converter_ui.py
-        
+
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4 
       with:
         name: macos-build
         path: |
